@@ -1,0 +1,13 @@
+# OS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# 一時ファイル
+*.tmp
+data/*.tmp
+
+# ツール出力
+.playwright-mcp/

@@ -1,0 +1,345 @@
+:root {
+  --bg: #ffffff;
+  --fg: #1a1a1a;
+  --muted: #6b7280;
+  --border: #e2e5ea;
+  --accent: #0d6efd;
+  --accent-dark: #0a58ca;
+  --hover: #f3f6fb;
+  --sel-bg: #eef5ff;
+  --curated: #b8860b;
+  --ok: #15803d;
+  --err: #b91c1c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Segoe UI", sans-serif;
+  font-size: 13px;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ---- header ---- */
+.app-header {
+  padding: 10px 12px 6px;
+  border-bottom: 1px solid var(--border);
+}
+.app-header h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+.meta-line {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ---- selection banner ---- */
+.selection {
+  padding: 10px 12px;
+  background: var(--sel-bg);
+  border-bottom: 1px solid var(--border);
+}
+.selection-id-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.selection-label {
+  font-size: 11px;
+  color: var(--muted);
+}
+.selection-id {
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
+}
+.copy-btn {
+  margin-left: auto;
+  padding: 5px 12px;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.copy-btn:hover {
+  background: var(--accent-dark);
+}
+.copy-btn.copied {
+  background: var(--ok);
+}
+.selection-path {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #374151;
+  word-break: break-word;
+}
+.ebay-link {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--accent);
+  text-decoration: none;
+}
+.ebay-link:hover {
+  text-decoration: underline;
+}
+
+/* ---- tabs ---- */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+}
+.tab {
+  flex: 1;
+  padding: 9px 0;
+  border: none;
+  background: none;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+.tab.active {
+  color: var(--accent);
+  font-weight: 700;
+  border-bottom-color: var(--accent);
+}
+
+/* ---- how-to ガイド ---- */
+.how-to {
+  margin: 0;
+  padding: 7px 12px;
+  font-size: 12px;
+  color: #374151;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ---- filters (開閉式) ---- */
+.filters {
+  border-bottom: 1px solid var(--border);
+}
+.filters-summary {
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--accent);
+  cursor: pointer;
+  user-select: none;
+}
+.filters-body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px 8px;
+}
+.department-filter {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+}
+.curated-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* ---- panels ---- */
+.panels {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.panel {
+  display: none;
+  padding: 10px 12px;
+}
+.panel.active {
+  display: block;
+}
+.search-input {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.status {
+  margin: 8px 0 4px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ---- result / tree list ---- */
+.result-list {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+}
+.result-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.result-item:hover {
+  background: var(--hover);
+}
+.result-main {
+  flex: 1;
+  min-width: 0;
+}
+.result-name {
+  font-weight: 600;
+}
+.result-name .branch-caret {
+  color: var(--muted);
+  font-weight: 400;
+}
+/* 日本語訳 (主役): 大きく濃く表示して高齢の利用者でも読みやすく */
+.result-ja {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--fg);
+  line-height: 1.4;
+}
+/* 英語名 (補助): 小さく薄く */
+.result-en {
+  font-size: 11px;
+  color: var(--muted);
+  word-break: break-word;
+}
+.result-path {
+  font-size: 11px;
+  color: var(--muted);
+  word-break: break-word;
+}
+.result-id {
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: #374151;
+}
+.badge-curated {
+  font-size: 10px;
+  color: var(--curated);
+  border: 1px solid var(--curated);
+  border-radius: 4px;
+  padding: 0 4px;
+  white-space: nowrap;
+}
+.mini-copy {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 5px;
+  padding: 3px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.mini-copy:hover {
+  background: var(--hover);
+}
+.mini-copy.copied {
+  color: var(--ok);
+  border-color: var(--ok);
+}
+.empty {
+  padding: 16px 6px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* ---- breadcrumb ---- */
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 4px;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.crumb {
+  border: none;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 2px 0;
+  font-size: 12px;
+}
+.crumb:hover {
+  text-decoration: underline;
+}
+.crumb.current {
+  color: var(--fg);
+  font-weight: 700;
+  cursor: default;
+}
+.crumb-sep {
+  color: var(--muted);
+}
+
+/* ---- verify ---- */
+.verify-result {
+  margin-top: 12px;
+  font-size: 13px;
+}
+.verify-found {
+  padding: 10px;
+  border: 1px solid var(--ok);
+  border-radius: 6px;
+  background: #f0fdf4;
+}
+.verify-not-found {
+  padding: 10px;
+  border: 1px solid var(--err);
+  border-radius: 6px;
+  background: #fef2f2;
+  color: var(--err);
+}
+.verify-path {
+  margin-top: 6px;
+  color: #374151;
+  word-break: break-word;
+}
+
+/* ---- footer ---- */
+.app-footer {
+  padding: 6px 12px;
+  border-top: 1px solid var(--border);
+  font-size: 10px;
+  color: var(--muted);
+  text-align: center;
+}

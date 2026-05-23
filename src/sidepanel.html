@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ebayカテゴリー発見君</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>ebayカテゴリー発見君</h1>
+    <p id="meta-line" class="meta-line">読み込み中…</p>
+  </header>
+
+  <p class="how-to">① 言葉を入れる（日本語OK）　→　② 候補をクリック　→　③ IDをコピー</p>
+
+  <!-- 選択中のカテゴリID を常に目立つ位置に表示 -->
+  <section id="selection" class="selection hidden" aria-live="polite">
+    <div class="selection-id-row">
+      <span class="selection-label">選択中の categoryID</span>
+      <span id="selection-id" class="selection-id"></span>
+      <button id="copy-btn" class="copy-btn" type="button">コピー</button>
+    </div>
+    <div id="selection-path" class="selection-path"></div>
+    <a id="selection-ebay-link" class="ebay-link hidden" target="_blank" rel="noopener noreferrer">eBay のカテゴリページを開く ↗</a>
+  </section>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="search" role="tab" type="button">検索</button>
+    <button class="tab" data-tab="tree" role="tab" type="button">ツリー</button>
+    <button class="tab" data-tab="verify" role="tab" type="button">検証</button>
+  </nav>
+
+  <!-- 共通の絞り込み (検索・ツリーに効く)。普段はたたんでおく -->
+  <details class="filters">
+    <summary class="filters-summary">絞り込み（部門・厳選版）</summary>
+    <div class="filters-body">
+      <select id="department-filter" class="department-filter" aria-label="部門で絞り込み">
+        <option value="">すべての部門</option>
+      </select>
+      <label class="curated-toggle">
+        <input type="checkbox" id="curated-toggle" />
+        <span>厳選版のみ</span>
+      </label>
+    </div>
+  </details>
+
+  <main class="panels">
+    <!-- 検索パネル -->
+    <section id="panel-search" class="panel active" role="tabpanel">
+      <input
+        type="search"
+        id="search-input"
+        class="search-input"
+        placeholder="例: トレカ / フィギュア / 時計 / watch（日本語OK）"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <p id="search-status" class="status"></p>
+      <ul id="search-results" class="result-list"></ul>
+    </section>
+
+    <!-- ツリーパネル -->
+    <section id="panel-tree" class="panel" role="tabpanel">
+      <nav id="breadcrumb" class="breadcrumb"></nav>
+      <ul id="tree-list" class="result-list"></ul>
+    </section>
+
+    <!-- 検証パネル -->
+    <section id="panel-verify" class="panel" role="tabpanel">
+      <input
+        type="text"
+        id="verify-input"
+        class="search-input"
+        placeholder="categoryID を入力 (例: 31387)"
+        inputmode="numeric"
+        autocomplete="off"
+      />
+      <div id="verify-result" class="verify-result"></div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <span id="footer-note">完全オフライン・eBay 非アクセス</span>
+  </footer>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>
