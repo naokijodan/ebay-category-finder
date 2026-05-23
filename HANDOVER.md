@@ -17,13 +17,25 @@ eBay に手動出品するとき、商品に合う **カテゴリID** を探す 
 - 追加: **日本語ジャンル検索**。`data/aliases.json`（約70語、トレカ/フィギュア/時計…）。検索 7/7 パス（トレカ→CCG Individual Cards 183454 等、辞書全キーがヒット、誤ヒットなし）。
 - UI改善: 画面上部に使い方ガイド（① 言葉→② 候補→③ コピー）、絞り込みを開閉式に。
 
+## Git / 公開（2026-05-24 完了）
+- 本体リポジトリ(PUBLIC): https://github.com/naokijodan/ebay-category-finder （commit 8231639、push済み）
+- プライバシーポリシー(PUBLIC): https://github.com/naokijodan/ebay-category-finder-privacy
+- プライバシーポリシー公開URL: https://naokijodan.github.io/ebay-category-finder-privacy/
+- 公開前に秘密情報フルスキャン→検出ゼロ。`.gitignore` あり。`git add -A` 不使用（明示add）。
+
+## Chrome ウェブストア 申請素材（2026-05-24 完了）
+場所: `~/Desktop/ebayカテゴリー発見君_提出用/`
+- `ebayカテゴリー発見君-v1.0.0.zip`（提出用・manifest直下・scripts/docs除外）
+- `アイコン_128x128.png`（ストアアイコン）
+- `スクショ1〜4_*.png`（1280x800・24bit PNG・アルファなし）。生成 `scripts/make_screenshots.py`
+- `privacy-policy.html`
+- 概要文・詳細説明文・「プライバシーの取り扱い」フォーム回答 → このセッションのチャットに記載
+
 ## 残タスク（次セッション）
-1. **実機確認**: ユーザーが `chrome://extensions`→デベロッパーモード→「パッケージ化されていない拡張機能を読み込む」→このフォルダ。検索欄に「トレカ」「時計」等で動作確認。
-2. **ユーザーの追加フィードバック反映**: 「使い方が難しい」への対応は日本語検索＋ガイド＋フィルタ折りたたみまで実施。さらに要望があれば対応。辞書 `aliases.json` は手で追記可能。
-3. **完了処理（ルール: completion.md / STANDALONE C-S1）**: ユーザー承認後に
-   - git（このフォルダは未 init。`git init`→コミットの可否をユーザーに確認）
-   - Obsidian 開発ログ（`/開発ログ/` に `ebay-category-finder_開発.md`）
-   - Discord 通知（`~/.claude/scripts/notify-discord.sh`）
+1. **Chrome ウェブストアへの申請**（ユーザー操作）: ZIP/アイコン/スクショ/説明文/プライバシーURL を登録。
+2. **実機確認**: `chrome://extensions`→デベロッパーモード→拡張を読み込む or 更新(⟳)→「トレカ シングル」「腕時計」等で確認。
+3. **Discord 通知**: 未送信（ユーザーが「終了」のため見送り）。必要なら `~/.claude/scripts/notify-discord.sh`。
+4. **将来課題**: 正規化のNFKC化／1文字ジャンル語の許可リスト化／残り英語のみカテゴリ(10,180件)の翻訳。
 
 ## 大仕事: 各カテゴリの日本語訳 — ✅ 完了（2026-05-24）
 **目的**: 厳選版カテゴリに日本語訳を付け、(1) 検索ワードとマッチ (2) 候補の各行に日本語を主役表示（高齢者でも分かるように） (3)「トレカ シングル」等の複合語で検索可能に。→ すべて実装・検証ずみ。
