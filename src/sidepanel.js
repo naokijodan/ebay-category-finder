@@ -33,6 +33,7 @@ const state = {
   treePath: [], // ツリーの現在地 (セグメント名の配列)
   selectedId: null,
   aliasMatchers: new Map(), // 正規化した日本語ジャンル -> 英語語の正規表現配列
+  recommendations: [], // [{normalizedKeys: string[], ids: string[]}] おすすめカテゴリ一覧
 };
 
 // ---- DOM ----
@@ -206,6 +207,23 @@ function createLeafItem(leaf, options = {}) {
   return li;
 }
 
+// ---- おすすめカテゴリ選定 ----
+// クエリのスペース除去文字列 qNoSpace に部分一致するキーを持つエントリを探し、
+// 最長キー優先でエントリを返す。該当なしは null を返す。
+function findRecommendation(qNoSpace) {
+  let bestEntry = null;
+  let bestKeyLen = -1;
+  for (const entry of state.recommendations) {
+    for (const key of entry.normalizedKeys) {
+      if (qNoSpace.includes(key) && key.length > bestKeyLen) {
+        bestEntry = entry;
+        bestKeyLen = key.length;
+      }
+    }
+  }
+  return bestEntry;
+}
+
 // ---- 検索 ----
 function runSearch() {
   const query = normalizeText(els["search-input"].value.trim());
@@ -217,6 +235,13 @@ function runSearch() {
   }
   const terms = query.split(/\s+/).filter(Boolean);
   const joined = terms.join(" ");
+
+  // スペースを除去した文字列でおすすめを選定する。
+  const qNoSpace = terms.join("");
+  const recoEntry = findRecommendation(qNoSpace);
+
+  // おすすめIDのSet（通常ヒットから除外するため）。
+  const recoIds = recoEntry ? new Set(recoEntry.ids) : new Set();
 
   // 各キーワードを {plain: 語そのもの, alias: 英語語の正規表現群|null} に変換。
   // 照合は「英語語(alias)に一致」または「語が訳文等にそのまま含まれる(plain)」のどちらかで採用。
@@ -231,6 +256,8 @@ function runSearch() {
 
   const matches = [];
   for (const leaf of pool) {
+    // おすすめと重複するIDは通常ヒット側から除外する。
+    if (recoIds.has(leaf.id)) continue;
     const hay = leaf._search; // 起動時にアクセント除去・小文字化済み
     const ok = termMatchers.every((m) => {
       const aliasOk = m.alias && m.alias.some((re) => re.test(hay));
@@ -245,15 +272,59 @@ function runSearch() {
   matches.sort((a, b) => scoreLeaf(b, joined, terms) - scoreLeaf(a, joined, terms) || a.path.localeCompare(b.path));
 
   const total = matches.length;
-  if (total === 0) {
+
+  // おすすめも通常ヒットもない場合は「一致なし」を表示。
+  if (!recoEntry && total === 0) {
     els["search-status"].textContent = "一致するカテゴリはありません。";
     return;
   }
-  const shown = Math.min(total, MAX_RESULTS);
-  els["search-status"].textContent =
-    total > MAX_RESULTS ? `${total.toLocaleString()} 件中 上位 ${shown} 件を表示` : `${total.toLocaleString()} 件`;
 
   const frag = document.createDocumentFragment();
+
+  // おすすめがある場合はリスト最上部に固定表示する。
+  if (recoEntry) {
+    for (const id of recoEntry.ids) {
+      const leaf = state.byId.get(id);
+      if (!leaf) continue;
+      const li = createLeafItem(leaf);
+      // 「おすすめ」バッジを日本語訳行に付与する。
+      const jaRow = li.querySelector(".result-ja") || li.querySelector(".result-name");
+      if (jaRow) {
+        const badge = document.createElement("span");
+        badge.className = "badge-reco";
+        badge.textContent = "おすすめ";
+        jaRow.append(" ");
+        jaRow.append(badge);
+      }
+      frag.append(li);
+    }
+  }
+
+  // 通常ヒットが1件以上あれば「参考」区切り見出しを挟む。
+  if (recoEntry && total > 0) {
+    const sep = document.createElement("li");
+    sep.className = "reco-separator";
+    sep.textContent = "参考";
+    frag.append(sep);
+  }
+
+  // ステータス表示を組み立てる。
+  const shown = Math.min(total, MAX_RESULTS);
+  if (recoEntry) {
+    if (total === 0) {
+      els["search-status"].textContent = `おすすめ ${recoEntry.ids.length} 件`;
+    } else {
+      const refPart =
+        total > MAX_RESULTS
+          ? `参考 ${total.toLocaleString()} 件中 上位 ${shown} 件を表示`
+          : `参考 ${total.toLocaleString()} 件`;
+      els["search-status"].textContent = `おすすめ ${recoEntry.ids.length} 件 ・ ${refPart}`;
+    }
+  } else {
+    els["search-status"].textContent =
+      total > MAX_RESULTS ? `${total.toLocaleString()} 件中 上位 ${shown} 件を表示` : `${total.toLocaleString()} 件`;
+  }
+
   for (let i = 0; i < shown; i++) {
     frag.append(createLeafItem(matches[i]));
   }
@@ -509,6 +580,29 @@ async function loadTranslations() {
   return map;
 }
 
+// ---- おすすめカテゴリ辞書の読み込み ----
+// data/recommendations.json を読み込み、state.recommendations に格納する。
+// 読み込み失敗時は console.warn して従来動作を維持する。
+async function loadRecommendations() {
+  try {
+    const resp = await fetch("../data/recommendations.json");
+    if (!resp.ok) {
+      console.warn("recommendations.json を読み込めませんでした (おすすめ機能は無効):", resp.status);
+      return;
+    }
+    const data = await resp.json();
+    const list = data.recommendations || [];
+    for (const entry of list) {
+      if (!Array.isArray(entry.keys) || !Array.isArray(entry.ids)) continue;
+      // キーは normalizeText で正規化してからスペースを除去して保持する。
+      const normalizedKeys = entry.keys.map((k) => normalizeText(k).replace(/\s+/g, ""));
+      state.recommendations.push({ normalizedKeys, ids: entry.ids });
+    }
+  } catch (error) {
+    console.warn("recommendations.json を読み込めませんでした (おすすめ機能は無効):", error);
+  }
+}
+
 // ---- 日本語ジャンル辞書の読み込み ----
 async function loadAliases() {
   try {
@@ -549,6 +643,7 @@ async function init() {
     state.translatedCount = translations.size;
     state.root = buildTree(state.leaves);
     await loadAliases();
+    await loadRecommendations();
 
     const m = data.meta || {};
     const jaPart = state.translatedCount ? ` ・ 日本語訳 ${state.translatedCount.toLocaleString()}` : "";

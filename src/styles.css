@@ -262,6 +262,27 @@ body {
   padding: 0 4px;
   white-space: nowrap;
 }
+/* おすすめバッジ: 青系背景・白文字・角丸 */
+.badge-reco {
+  font-size: 10px;
+  color: #fff;
+  background: var(--accent);
+  border-radius: 4px;
+  padding: 0 5px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+/* 「参考」区切り見出し: 控えめなグレー小見出し */
+.reco-separator {
+  padding: 4px 6px 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  list-style: none;
+  border-bottom: 1px solid var(--border);
+  background: none;
+  cursor: default;
+}
 .mini-copy {
   border: 1px solid var(--border);
   background: #fff;

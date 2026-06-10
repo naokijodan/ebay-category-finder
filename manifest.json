@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ebayカテゴリー発見君",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "eBay のカテゴリID をオフラインで検索・ツリー閲覧・コピー・検証する手動出品用ツール (EBAY_US, treeVersion 134)。eBay には一切アクセスしません。",
   "minimum_chrome_version": "114",
   "permissions": ["sidePanel", "clipboardWrite"],
