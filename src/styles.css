@@ -298,6 +298,28 @@ body {
   color: var(--ok);
   border-color: var(--ok);
 }
+.mini-fav {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 5px;
+  padding: 3px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.mini-fav:hover {
+  background: var(--hover);
+}
+/* 「⭐ お気に入り」区切り見出し: 参考区切りと同じ見た目で統一 */
+.fav-separator {
+  padding: 4px 6px 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  list-style: none;
+  border-bottom: 1px solid var(--border);
+  background: none;
+  cursor: default;
+}
 .empty {
   padding: 16px 6px;
   color: var(--muted);

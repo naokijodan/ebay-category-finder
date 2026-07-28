@@ -34,6 +34,7 @@ const state = {
   selectedId: null,
   aliasMatchers: new Map(), // 正規化した日本語ジャンル -> 英語語の正規表現配列
   recommendations: [], // [{normalizedKeys: string[], ids: string[]}] おすすめカテゴリ一覧
+  favorites: new Set(), // お気に入りの categoryID (Set は挿入順を保持するので、そのまま保存順として使える)
 };
 
 // ---- DOM ----
@@ -202,9 +203,106 @@ function createLeafItem(leaf, options = {}) {
     copyText(leaf.id, copyBtn, "済");
   });
 
-  li.append(main, idSpan, copyBtn);
+  const favBtn = document.createElement("button");
+  favBtn.type = "button";
+  favBtn.className = "mini-fav";
+  favBtn.textContent = isFavorite(leaf.id) ? "⭐解除" : "⭐追加";
+  favBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleFavorite(leaf.id);
+    favBtn.textContent = isFavorite(leaf.id) ? "⭐解除" : "⭐追加";
+    // お気に入り一覧 (未入力時の表示) が出ている場合は再描画して増減を反映する。
+    if (els["search-input"].value.trim() === "") {
+      renderFavorites();
+    }
+  });
+
+  li.append(main, idSpan, copyBtn, favBtn);
   li.addEventListener("click", () => selectLeaf(leaf));
   return li;
+}
+
+// ---- お気に入り (chrome.storage.local) ----
+// chrome.storage が使えない環境 (sidepanel.html を単体でタブ表示してテストする場合など) では
+// メモリ内のみで動作させ、例外を投げない。
+function isFavorite(id) {
+  return state.favorites.has(id);
+}
+
+function hasChromeStorage() {
+  return typeof chrome !== "undefined" && !!chrome.storage && !!chrome.storage.local;
+}
+
+function toggleFavorite(id) {
+  if (state.favorites.has(id)) {
+    state.favorites.delete(id);
+  } else {
+    state.favorites.add(id);
+  }
+  saveFavorites();
+}
+
+function saveFavorites() {
+  if (!hasChromeStorage()) return;
+  try {
+    chrome.storage.local.set({ favorites: Array.from(state.favorites) }, () => {
+      if (chrome.runtime && chrome.runtime.lastError) {
+        console.warn("お気に入りの保存に失敗しました:", chrome.runtime.lastError);
+      }
+    });
+  } catch (error) {
+    console.warn("お気に入りの保存に失敗しました:", error);
+  }
+}
+
+function loadFavorites() {
+  return new Promise((resolve) => {
+    if (!hasChromeStorage()) {
+      resolve();
+      return;
+    }
+    try {
+      chrome.storage.local.get(["favorites"], (result) => {
+        if (chrome.runtime && chrome.runtime.lastError) {
+          console.warn("お気に入りの読み込みに失敗しました:", chrome.runtime.lastError);
+          resolve();
+          return;
+        }
+        const list = Array.isArray(result && result.favorites) ? result.favorites : [];
+        for (const id of list) state.favorites.add(id);
+        resolve();
+      });
+    } catch (error) {
+      console.warn("お気に入りの読み込みに失敗しました:", error);
+      resolve();
+    }
+  });
+}
+
+// ---- お気に入り一覧の描画 (検索欄が空のときに表示する) ----
+function renderFavorites() {
+  const list = els["search-results"];
+  list.replaceChildren();
+  const ids = Array.from(state.favorites); // Set の挿入順 = 保存順 (古い→新しい)
+  if (!ids.length) {
+    els["search-status"].textContent = "キーワードを入力してください。";
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  const sep = document.createElement("li");
+  sep.className = "fav-separator";
+  sep.textContent = "⭐ お気に入り";
+  frag.append(sep);
+
+  let shown = 0;
+  for (const id of ids) {
+    const leaf = state.byId.get(id);
+    if (!leaf) continue; // 存在しないIDはスキップして続行
+    frag.append(createLeafItem(leaf));
+    shown++;
+  }
+  list.append(frag);
+  els["search-status"].textContent = `お気に入り ${shown.toLocaleString()} 件`;
 }
 
 // ---- おすすめカテゴリ選定 ----
@@ -230,7 +328,7 @@ function runSearch() {
   const list = els["search-results"];
   list.replaceChildren();
   if (!query) {
-    els["search-status"].textContent = "キーワードを入力してください。";
+    renderFavorites();
     return;
   }
   const terms = query.split(/\s+/).filter(Boolean);
@@ -644,6 +742,7 @@ async function init() {
     state.root = buildTree(state.leaves);
     await loadAliases();
     await loadRecommendations();
+    await loadFavorites();
 
     const m = data.meta || {};
     const jaPart = state.translatedCount ? ` ・ 日本語訳 ${state.translatedCount.toLocaleString()}` : "";
@@ -653,7 +752,7 @@ async function init() {
 
     populateDepartments();
     setupEvents();
-    els["search-status"].textContent = "キーワードを入力してください。";
+    renderFavorites();
     renderTree();
   } catch (error) {
     console.error("データの読み込みに失敗しました:", error);
