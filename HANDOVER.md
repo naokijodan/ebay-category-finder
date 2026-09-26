@@ -105,8 +105,38 @@ eBay に手動出品するとき、商品に合う **カテゴリID** を探す 
   - 葉を選択すると `#selection-motors-tag` が Motors葉のときだけ表示され、非Motors葉では非表示に切り替わることを確認。
   - スクリーンショット: `/private/tmp/claude-501/-Users-naokijodan/4efe65ef-f141-44fe-871b-2a339447b593/scratchpad/motors_search.png`（このセッションのスクラッチパッド。恒久保存が必要なら移動要）。
 
+## 2026-09-26: v1.3.0 申請素材 作成（実施ずみ）
+
+**背景**: 上記の Motors データ追加（v1.2.0→次バージョン用データ）を受けて、Chrome ウェブストア更新申請用の一式を作成した。
+
+**実施内容（Fact）**:
+- `manifest.json`: `version` を `1.2.0`→`1.3.0` に変更。`description` 末尾に「eBay Motors（自動車・オートバイ部品）のカテゴリにも対応。」を追記（125文字、132文字以内。`len()`で確認ずみ）。`permissions` は無変更（`sidePanel`, `clipboardWrite`, `storage`）。
+- `docs/store-listing.md`（新規）: 概要文・詳細説明文・「更新内容（What's new）」短文・プライバシー設問回答・件数まとめ表を作成。**Unknown**: v1.2.0 申請時の掲載文言そのものを保存したファイルは見つからず（README/HANDOVER の記述にも実際の文面は残っていなかった）。そのため文面は HANDOVER と README の記述内容から新規に組み立てた（作業指示どおり「無ければHANDOVERの記述から復元」）。
+- スクリーンショット: `scripts/make_screenshots.py` を再利用（`FINDER_RAW_DIR` 環境変数で生画像の入力先を指定できるよう修正。ロジック自体は変更なし）。Playwright（`~/.npm-global/lib/node_modules/playwright`）で拡張を `--load-extension` 読み込みし、`sidepanel.html` を直接開いて360x800で4枚撮影（トレカ検索／腕時計選択(日本語訳)／ツリータブ／Motors部門フィルタ+マフラー検索+葉選択）→ `make_screenshots.py` で1280x800・RGB・アルファなしに合成。
+  - 新: `スクショ1_検索.png`（同じ構図・同じ文言で再生成）
+  - 新: `スクショ2_日本語訳.png`（文言の件数のみ4,931→6,822に更新）
+  - 新: `スクショ3_ツリー.png`（文言を34→35大分類・eBay Motors含む、に更新）
+  - 新: `スクショ4_Motors.png`（旧スクショ4_検証を置き換え。eBay Motors対応をアピール。マフラー検索でMotors結果＋「Motors」タグ付き選択状態を撮影）
+  - 旧4枚（v1.2.0時点）は `提出用/old-v1.2.0/` に移動して保存ずみ。
+- ZIP: `提出用/ebayカテゴリー発見君-v1.3.0.zip` を、v1.2.0 と同じ13ファイル構成（manifest.json / src4点 / data4点 / icons4点）で作成。`unzip -l` で内容確認、`unzip`で取り出したmanifest.jsonの`version`が`1.3.0`であることを確認ずみ。v1.2.0のZIPは削除していない。
+- README.md: バージョン表記（1.3.0）追加、ファイル構成に`docs/`と`scripts/make_screenshots.py`等を追記、「Chrome ウェブストア 申請素材」節を新設し場所を明記。
+- プライバシーポリシー: 権限・データ取り扱いに変更がないため**変更していない**（`privacy-policy.html` 無改修）。
+
+**検証（Fact）**:
+- `sips` で4枚とも 1280x800 / RGB / アルファなし を確認。
+- `python3 -c "import json; json.load(...)"` で `manifest.json` のJSON妥当性を確認。
+- `grep -rn 'ann-pain|deepjapan'` を本プロジェクト・提出用フォルダに実行 → 0件。
+- 絵文字チェック（Unicode絵文字レンジで走査）→ 今回新規作成・編集したファイル（manifest.json / docs/store-listing.md / README.md 追記部分 / HANDOVER.md 本節）に絵文字なし。矢印記号（→ ↗）は既存箇所に従来からあるナビゲーション表記で絵文字ではない。
+- `data/*.json`・`scripts/build_*.py`・`src/` のロジックは無変更（今回のdiffは manifest.json のversion/description、scripts/make_screenshots.pyの入力パス変数化とSHOTS文言・ファイル名のみ）。
+- eBayサイトへのアクセスなし（Playwrightは拡張のsidepanel.htmlをchrome-extension://で開いただけ）。APIキー出力なし。git commit/pushは実施していない（親のレビュー後に実施の方針どおり）。
+
+**判断に迷った点（Fact/報告用）**:
+- v1.2.0時点の実際の掲載文言ファイルが見当たらなかったため、`docs/store-listing.md` は新規に文章を組み立てた。内容はHANDOVER/READMEの事実（件数・機能・安全性）のみで構成し、誇張や未確認の効能は書いていない。
+- スクショ4は「検証タブ」から「Motors対応」に差し替えた（指示の「スクショ4_Motors.png等にする」という書き方に沿った判断）。検証タブ自体の説明はストア詳細説明文の「できること」欄に文章で残している。
+
 ## 次にやること（次セッション・ユーザー承認後）
-1. **バージョン更新・申請素材**: manifest.jsonを1.3.0に上げ、スクリーンショット再撮影・ZIP作成（親の承認後）。
-2. **実機確認**: `chrome://extensions` で拡張を通常インストールし、`ebay.com/b/-/<Motors categoryId>` リンクの有効性を確認（今回はPlaywrightのオフライン確認のみで、eBay自体へのアクセスは禁止事項のため未実施＝Unknown）。
-3. v1.2.0 はストアで公開済み（一般公開、2026-07-29 更新、ユーザー数96。2026-09-26 にユーザーがデベロッパーダッシュボードの画面で確認、Fact）。Motors 追加は v1.3.0 の更新申請として出す。
-4. 翻訳は完了ずみ（上記参照）。次回のeBayカテゴリ改訂時は README「データの更新手順」に従い build_categories.py → translate_categories.py の順で再生成する。
+1. **ユーザーが実機で確認**: 通常インストールした拡張で、Motors葉を選択→「eBay のカテゴリページを開く」リンクが `ebay.com/b/-/<categoryId>` として実際に開けるか1件確認する（今回はPlaywrightのオフライン確認のみで、eBay自体へのアクセスは禁止事項のため未実施＝Unknown）。
+2. **ストア更新申請（ユーザー作業）**: Chrome Web Store Developer Dashboard で `提出用/ebayカテゴリー発見君-v1.3.0.zip` をアップロードし、`docs/store-listing.md` の文言で更新申請を提出する。プライバシー設問は「変更なし」で回答。
+3. **公開後の記載更新**: 審査通過・公開後、`~/Desktop/ガイド・ドキュメント/bulk-tools-guide/extensions.html` の当該拡張の記載（バージョン・対応範囲）を更新する。
+4. v1.2.0 はストアで公開済み（一般公開、2026-07-29 更新、ユーザー数96。2026-09-26 にユーザーがデベロッパーダッシュボードの画面で確認、Fact）。Motors 追加は v1.3.0 の更新申請として出す。
+5. 翻訳は完了ずみ（上記参照）。次回のeBayカテゴリ改訂時は README「データの更新手順」に従い build_categories.py → translate_categories.py の順で再生成する。

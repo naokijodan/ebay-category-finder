@@ -14,9 +14,14 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
+import os
+
 HOME = Path.home()
 OUT_DIR = HOME / "Desktop" / "ebayカテゴリー発見君_提出用"
 ICON = HOME / "Desktop" / "ebay-category-finder" / "icons" / "icon128.png"
+# Playwright で撮った生パネル画像 (~/finder_*.png) の置き場所。
+# 環境変数 FINDER_RAW_DIR で上書き可（デフォルトは HOME 直下）。
+RAW_DIR = Path(os.environ.get("FINDER_RAW_DIR", str(HOME)))
 W, H = 1280, 800
 TOP = (220, 233, 255)
 BOTTOM = (247, 250, 255)
@@ -31,15 +36,15 @@ SHOTS = [
     ("finder_toreka.png", "スクショ1_検索.png",
      "日本語で、ぴったりのカテゴリを。",
      "「トレカ」「まとめ」「シングル」など日本語で検索。eBay 出品のカテゴリ ID がすぐ見つかります。"),
-    ("finder_watch.png", "スクショ2_日本語訳.png",
+    ("finder_ja.png", "スクショ2_日本語訳.png",
      "英語が読めなくても大丈夫。",
-     "主要 4,931 カテゴリに日本語訳つき。各候補に日本語を大きく表示します。"),
+     "厳選 6,822 カテゴリに日本語訳つき。各候補に日本語を大きく表示します。"),
     ("finder_tree.png", "スクショ3_ツリー.png",
      "ツリーでたどって選べる。",
-     "34 の大分類から枝をたどって、目的のカテゴリへ。"),
-    ("finder_verify.png", "スクショ4_検証.png",
-     "カテゴリ ID を検証。",
-     "手元の ID が現在のカテゴリ表にあるか、ワンタッチで確認できます。"),
+     "35 の大分類（eBay Motors 含む）から枝をたどって、目的のカテゴリへ。"),
+    ("finder_motors.png", "スクショ4_Motors.png",
+     "自動車・バイク部品にも対応。",
+     "eBay Motors の部品カテゴリ 2,965 件を追加。「マフラー」「ブレーキ」など日本語で検索できます。"),
 ]
 
 
@@ -136,7 +141,7 @@ def compose(panel_path: Path, out_name: str, headline: str, sub: str) -> None:
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     for src, name, head, sub in SHOTS:
-        p = HOME / src
+        p = RAW_DIR / src
         if not p.exists():
             print(f"スキップ (元画像なし): {p}")
             continue

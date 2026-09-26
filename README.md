@@ -3,6 +3,7 @@
 eBay に1件ずつ手動出品するとき、その商品に合う **eBay カテゴリID** を素早く見つけるための Chrome 拡張機能です。
 **完全オフラインで動作し、eBay には一切アクセスしません**（同梱した静的データだけを使います）。
 
+- バージョン: **1.3.0**（2026-09-26、eBay Motors 追加）
 - マーケットプレイス: **EBAY_US**
 - treeVersion: **134**
 - 収録: **18,076 葉カテゴリ / 35 部門**（うち厳選版 **6,822 件**、日本語訳カバレッジ **6,822/6,822（100%）**）
@@ -98,9 +99,13 @@ ebay-category-finder/
 │   ├── aliases.json           日本語ジャンル語 → 英語語 の対応表（手編集可）
 │   ├── recommendations.json   検索語ごとのおすすめカテゴリ固定表示（手編集可）
 │   └── translations_ja.json   厳選版カテゴリの日本語訳（自動生成・手編集可）
-└── scripts/
-    ├── build_categories.py       CSV(+Motors JSON) → categories.json 生成スクリプト
-    └── translate_categories.py   厳選版カテゴリの日本語訳を OpenAI API で生成するスクリプト
+├── scripts/
+│   ├── build_categories.py       CSV(+Motors JSON) → categories.json 生成スクリプト
+│   ├── translate_categories.py   厳選版カテゴリの日本語訳を OpenAI API で生成するスクリプト
+│   ├── make_icon.py              アイコン(icons/icon*.png)生成スクリプト
+│   └── make_screenshots.py       ストア掲載用スクリーンショット(1280x800)合成スクリプト
+└── docs/
+    └── store-listing.md          Chrome ウェブストア掲載文言（概要文・詳細説明文・更新内容 等）
 ```
 
 ---
@@ -110,3 +115,12 @@ ebay-category-finder/
 - 実行時に eBay や外部サーバーへ一切アクセスしません（`host_permissions` なし）。
 - スクレイピング・自動操作は行いません。データは取得済み CSV から生成した静的 JSON のみ。
 - eBay ページを開くのは「リンクをあなたが手動でクリックしたとき」だけです（任意機能）。
+
+---
+
+## Chrome ウェブストア 申請素材
+
+- 申請用 ZIP・アイコン・スクリーンショット・プライバシーポリシー: `~/Desktop/ebayカテゴリー発見君_提出用/`
+- 掲載文言（概要文・詳細説明文・更新内容・プライバシー設問回答）: `docs/store-listing.md`
+- プライバシーポリシー（公開URL）: https://naokijodan.github.io/ebay-category-finder-privacy/
+  - v1.3.0 では権限・データの取り扱いに変更がないため、ポリシー本文は変更していません。
