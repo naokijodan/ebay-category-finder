@@ -106,6 +106,17 @@ body {
 .ebay-link:hover {
   text-decoration: underline;
 }
+.motors-tag {
+  display: inline-block;
+  margin-top: 6px;
+  margin-left: 6px;
+  font-size: 10px;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  border-radius: 3px;
+  padding: 1px 5px;
+  vertical-align: middle;
+}
 
 /* ---- tabs ---- */
 .tabs {

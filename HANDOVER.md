@@ -64,5 +64,49 @@ eBay に手動出品するとき、商品に合う **カテゴリID** を探す 
 
 ## 注意
 - eBay 非アクセス厳守（host_permissions なし）。
-- 検証スクリプト: `/tmp/verify_finder.js`（受け入れ基準）, `/tmp/verify_alias.js`（日本語検索）。
+- 検証スクリプト: `/tmp/verify_finder.js`（受け入れ基準）, `/tmp/verify_alias.js`（日本語検索）。※これらは `/tmp` のため現在は消えている。2026-09-26 の検証は下記の新スクリプトで実施。
 - 本文を短くしてツール呼び出しの malformed を避ける（CLAUDE.md ツール呼び出しの鉄則）。
+
+## 2026-09-26: eBay Motors カテゴリ追加（v1.2.0 → 次バージョンで申請予定）
+
+**背景**: 既存は通常ツリー（EBAY_US, treeVersion 134, 15,111葉/34部門/厳選4,931件）のみ。自動車・バイク・ボート等の部品出品向けに eBay Motors ツリー（treeId 100, treeVersion 83, 2026-09-08取得）を追加。
+
+**実装（Fact）**:
+- `scripts/build_categories.py`: `--motors-tree <json> --motors-curated <json>` を追加（任意引数、両方指定時のみ有効）。
+  - Motors 公式ツリー(`category_tree_100.json`)の root→eBay Motors(6000)→8カテゴリ配下を再帰的に走査し、葉（`leafCategoryTreeNode:true` または子なし）を抽出。path は `"eBay Motors > ... > 葉名"`（root は含めない）。
+  - 各葉に `department: "eBay Motors"`、`tree: "MOTORS"` を付与。既存の通常ツリー葉には `tree: "US"` を追加。
+  - curated 判定は `motors-category-reference.json` の `sections` 配下に載っている葉ID（mark=exclude/caution を含む全1,891件）に一致するかどうか。
+  - `departments` 末尾に `"eBay Motors"` を追加。`meta.motors = {treeId:"100", treeVersion:"83", source, leafCount:2965, curatedCount:1891, fetchedAt:"2026-09-08"}`。
+  - 通常ツリーとMotorsツリーの categoryId 重複チェックあり（重複0件を確認）。
+- `data/categories.json` 再生成: **18,076 葉 / 35 部門 / 厳選 6,822 件**（通常15,111葉・厳選4,931 ＋ Motors 2,965葉・厳選1,891）。ID重複なし（機械確認ずみ）。
+- `data/aliases.json`: Motors向け日本語ジャンル語を20件追加（車/自動車→car,truck、パーツ/部品→parts、バイク/オートバイ→motorcycle、マフラー→muffler,exhaust、ホイール→wheel、タイヤ→tire、ブレーキ→brake、ヘッドライト→headlight、ミラー→mirror、ステアリング→steering、シート→seat、エンジン→engine、キャブレター→carburetor、バッテリー→battery、ボート→boat、トラック→truck、工具→tool）。各語は Motors葉のname/pathに実在することをgrepで確認ずみ。**注**: タスク指示にあった「車 部品」等スペース入りキーはそのままでは使えない（検索は語ごとにAND照合する実装のため、スペース入りキーは絶対に一致しない）。単語単位に分割して登録し、複合語検索（例:「バイク パーツ」）は既存のAND方式で成立する設計にした（判断）。
+- `scripts/translate_categories.py`: SYSTEM_PROMPT にMotors向け注意（Exhaust→排気系、Mufflers→マフラー、Fenders→フェンダー等）を追記。「未収録のみ翻訳」は元から既定動作のため変更なし。
+- `src/sidepanel.js` / `src/sidepanel.html` / `src/styles.css`: `tree`フィールドはそのまま透過的に扱われる（検索・ツリー・部門フィルタ・厳選トグル・お気に入りは無改修で動作、Playwright実機確認ずみ）。選択中カテゴリの eBay リンク横に、`tree==="MOTORS"`の葉だけ小さな「Motors」タグを表示する処理を追加（`#selection-motors-tag`）。部門名は既存の `selection-path`（フルパス、先頭が部門名）にそのまま出るため追加UIは不要と判断。
+- `manifest.json` のバージョンは変更していない（親の判断待ち）。
+
+**元データの所在についての事実確認（Fact）**: タスク指示は `~/Desktop/ebay-categories-full.csv` を前提としていたが、実際には存在せず、`~/Desktop/eBayカテゴリ調査/ebay-categories-full.csv` にあった（行数・treeVersion・葉数が現行categories.jsonと一致することを確認して同一ファイルと判断）。`build_categories.py`のデフォルトパスは変更せず、今回は `--full` で実パスを明示指定した。**Unknown**: なぜ既定パスと実ファイル位置がずれているか（移動した経緯）は未確認。READMEの「データの更新手順」も参照。
+
+**翻訳（B節）— 完了（2026-09-26 追記）**:
+- 親が `~/.codex/config.toml` の `OPENAI_API_KEY` を有効なキーに差し替え（キーの値はログ・本引き継ぎに一切書いていない）。
+- `python3 scripts/translate_categories.py` を引数なしで実行 → Motors厳選1,891件を19バッチ全て成功（失敗0件）で翻訳。既訳4,931件は自動スキップされ、未訳分のみ処理される設計どおり動作。
+- カバレッジ: **6,822/6,822（100%）**（内訳: 通常ツリー厳選 4,931/4,931、Motors厳選 1,891/1,891）。
+- `data/translations_ja.json` はJSONとして妥当（`json.load`で検証）、`translations`件数6,822件（想定4,931+1,891=6,822と一致）、空文字の訳0件。
+- 抜き取り20件（Motors厳選からランダム抽出、機械的に対応確認）: `262095 Battery Management Systems (BMS)→BMS` `263175 ATV & UTV Covers→ATV・UTVカバー` `262177 Truck Beds & Repair Sections→トラック荷台・補修パーツ` `263192 Stereos & Radios→ステレオ・ラジオ` `179526 Slide Hammers→スライドハンマー` `263246 Accessory Mounts→アクセサリーマウント` `173657 Dyno Headers→ダイノヘッダー` `184793 Antennas→アンテナ` `178930 Brake Sensors & Switches→ブレーキセンサー・スイッチ` `33632 Manifolds & Headers→マニホールド・ヘッダー` `184904 Suspension & Steering Links→サス・ステアリングリンク` `179512 Roller Seats & Creepers→ローラーシート・クリーパー` `100452 Brakes→ブレーキ` `184706 Brake Wheel Cylinders→ブレーキホイールシリンダー` `179412 Signs & Decor→サイン・装飾` `179494 Gear/Differential Oil→ギア・デフオイル` `263154 Roll Cages→ロールケージ` `33717 Turn Signal Light Assemblies→ウインカーランプ` `174077 Shift Knobs→シフトノブ` `263358 Manifold Intake Adapter, Inlet & Joint→インマニアダプター・接続部`。全件、英語名と訳が対応していることを目視確認。
+- `grep -n China data/translations_ja.json` → 0件（不適切語なし）。
+
+**検証（D節・実施ずみ、Fact）**:
+- `python3 -c 'import json;...'` で件数・部門・tree集合・ID重複なしを確認（上記の数値どおり）。
+- Playwright (`~/.npm-global/lib/node_modules/playwright`) で `--load-extension` 読み込み、`chrome-extension://<id>/src/sidepanel.html` を開いて確認:
+  - 「マフラー」検索 → 81件中に `eBay Motors > ...Catalytic Converters...` がヒット（同時に「スカーフ」の日本語訳「マフラー」も上位に出るが、これは日本語の実際の多義語であり誤りではない）。
+  - 「brake」→116件中の多くが `eBay Motors >` パス。「ヘッドライト」→7件全てMotors。
+  - 部門フィルタで「eBay Motors」を選ぶと「brake」の結果が106件に絞り込まれ、全て `eBay Motors >` パスのみ。
+  - ツリータブの部門一覧に `eBay Motors ›2,965 件のカテゴリ` が表示。
+  - 「トレカ」検索は従来どおり（おすすめ2件＋参考61件、Collectibles/Toys & Hobbies配下）、回帰なし。
+  - 葉を選択すると `#selection-motors-tag` が Motors葉のときだけ表示され、非Motors葉では非表示に切り替わることを確認。
+  - スクリーンショット: `/private/tmp/claude-501/-Users-naokijodan/4efe65ef-f141-44fe-871b-2a339447b593/scratchpad/motors_search.png`（このセッションのスクラッチパッド。恒久保存が必要なら移動要）。
+
+## 次にやること（次セッション・ユーザー承認後）
+1. **バージョン更新・申請素材**: manifest.jsonを1.3.0に上げ、スクリーンショット再撮影・ZIP作成（親の承認後）。
+2. **実機確認**: `chrome://extensions` で拡張を通常インストールし、`ebay.com/b/-/<Motors categoryId>` リンクの有効性を確認（今回はPlaywrightのオフライン確認のみで、eBay自体へのアクセスは禁止事項のため未実施＝Unknown）。
+3. v1.2.0 はストアで公開済み（一般公開、2026-07-29 更新、ユーザー数96。2026-09-26 にユーザーがデベロッパーダッシュボードの画面で確認、Fact）。Motors 追加は v1.3.0 の更新申請として出す。
+4. 翻訳は完了ずみ（上記参照）。次回のeBayカテゴリ改訂時は README「データの更新手順」に従い build_categories.py → translate_categories.py の順で再生成する。

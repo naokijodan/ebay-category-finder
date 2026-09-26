@@ -69,6 +69,26 @@
     "模型": ["model"],
     "ピンバッジ": ["pin", "badge"],
     "バッジ": ["badge", "pin"],
-    "パズル": ["puzzle"]
+    "パズル": ["puzzle"],
+    "車": ["car", "truck"],
+    "自動車": ["car", "truck"],
+    "パーツ": ["parts"],
+    "部品": ["parts"],
+    "バイク": ["motorcycle"],
+    "オートバイ": ["motorcycle"],
+    "マフラー": ["muffler", "exhaust"],
+    "ホイール": ["wheel"],
+    "タイヤ": ["tire"],
+    "ブレーキ": ["brake"],
+    "ヘッドライト": ["headlight"],
+    "ミラー": ["mirror"],
+    "ステアリング": ["steering"],
+    "シート": ["seat"],
+    "エンジン": ["engine"],
+    "キャブレター": ["carburetor"],
+    "バッテリー": ["battery"],
+    "ボート": ["boat"],
+    "トラック": ["truck"],
+    "工具": ["tool"]
   }
 }

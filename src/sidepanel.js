@@ -42,6 +42,7 @@ const els = {};
 function cacheEls() {
   const ids = [
     "meta-line", "selection", "selection-id", "selection-path", "selection-ebay-link",
+    "selection-motors-tag",
     "copy-btn", "department-filter", "curated-toggle", "search-input", "search-status",
     "search-results", "breadcrumb", "tree-list", "verify-input", "verify-result",
   ];
@@ -102,6 +103,8 @@ function selectLeaf(leaf) {
   const link = els["selection-ebay-link"];
   link.href = `https://www.ebay.com/b/-/${encodeURIComponent(leaf.id)}`;
   link.classList.remove("hidden");
+  const motorsTag = els["selection-motors-tag"];
+  if (motorsTag) motorsTag.classList.toggle("hidden", leaf.tree !== "MOTORS");
   resetCopyButton(els["copy-btn"], "コピー");
 }
 
